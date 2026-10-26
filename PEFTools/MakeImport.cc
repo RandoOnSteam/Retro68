@@ -8,9 +8,12 @@
 #include <algorithm>
 
 #include <sys/types.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <process.h>
+#else
 #include <sys/wait.h>
+#endif
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -53,6 +56,49 @@ struct CFragMember
     }
 };
 
+#ifdef _WIN32
+static string QuoteArgument(const string& argument)
+{
+    if(!argument.empty() && argument.find_first_of(" \t\"") == string::npos)
+        return argument;
+    string quoted = "\"";
+    size_t backslashes = 0;
+    for(char c : argument)
+    {
+        if(c == '\\')
+        {
+            backslashes++;
+            continue;
+        }
+        if(c == '"')
+            quoted.append(backslashes * 2 + 1, '\\');
+        else
+            quoted.append(backslashes, '\\');
+        backslashes = 0;
+        quoted += c;
+    }
+    quoted.append(backslashes * 2, '\\');
+    quoted += '"';
+    return quoted;
+}
+
+void RunCommand(const char *command, std::vector<std::string> args)
+{
+    std::vector<std::string> quoted;
+    quoted.push_back(QuoteArgument(command));
+    for(auto& s : args)
+        quoted.push_back(QuoteArgument(s));
+    std::vector<const char*> ptrs;
+    for(auto& s : quoted)
+        ptrs.push_back(s.c_str());
+    ptrs.push_back(NULL);
+    if(_spawnvp(_P_WAIT, command, ptrs.data()) != 0)
+    {
+        std::cerr << command << " failed.\n";
+        exit(1);
+    }
+}
+#else
 void RunCommand(const char *command, std::vector<std::string> args)
 {
     std::vector<const char*> ptrs;
@@ -92,6 +138,7 @@ void RunCommand(const char *command, std::vector<std::string> args)
         exit(1);
     }
 }
+#endif
 
 void MakeImportLibrary(char *pefptr, size_t pefsize, fs::path dest, fs::path tmpdir)
 {

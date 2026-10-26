@@ -27,7 +27,6 @@
 #include <err.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>

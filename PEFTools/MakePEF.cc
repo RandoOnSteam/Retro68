@@ -6,7 +6,11 @@
 #include <set>
 #include <algorithm>
 #include <string.h>
+#ifdef _WIN32
+#include <malloc.h>
+#else
 #include <alloca.h>
+#endif
 
 #include <assert.h>
 #include <stdint.h>

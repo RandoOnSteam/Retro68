@@ -31,7 +31,12 @@
 
 #include <unistd.h>
 #include <sys/types.h>
+#ifdef _WIN32
+#include <process.h>
+#include <filesystem>
+#else
 #include <sys/wait.h>
+#endif
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -43,6 +48,50 @@ using std::ofstream;
 
 string realLdPath;
 
+#ifdef _WIN32
+static string QuoteArgument(const string& argument)
+{
+    if(!argument.empty() && argument.find_first_of(" \t\"") == string::npos)
+        return argument;
+    string quoted = "\"";
+    size_t backslashes = 0;
+    for(char c : argument)
+    {
+        if(c == '\\')
+        {
+            backslashes++;
+            continue;
+        }
+        if(c == '"')
+            quoted.append(backslashes * 2 + 1, '\\');
+        else
+            quoted.append(backslashes, '\\');
+        backslashes = 0;
+        quoted += c;
+    }
+    quoted.append(backslashes * 2, '\\');
+    quoted += '"';
+    return quoted;
+}
+
+void RealLD(vector<string> args)
+{
+    vector<string> quoted;
+    quoted.push_back(QuoteArgument(realLdPath));
+    for(string& s : args)
+        quoted.push_back(QuoteArgument(s));
+    vector<const char*> argv;
+    for(string& s : quoted)
+        argv.push_back(s.c_str());
+    argv.push_back(NULL);
+
+    intptr_t exitcode = _spawnv(_P_WAIT, realLdPath.c_str(), argv.data());
+    if(exitcode < 0)
+        err(EXIT_FAILURE, "unable to run %s", realLdPath.c_str());
+    if(exitcode)
+        exit((int)exitcode);
+}
+#else
 void RealLD(vector<string> args)
 {
     vector<const char*> argv;
@@ -84,12 +133,20 @@ void RealLD(vector<string> args)
     }
 
 }
+#endif
 
 int main(int argc, char *argv[])
 {
     vector<string> args;
     std::copy(argv + 1, argv+argc, std::back_inserter(args));
+#ifdef _WIN32
+    realLdPath = argv[0];
+    if(boost::algorithm::iends_with(realLdPath, ".exe"))
+        realLdPath.resize(realLdPath.size() - 4);
+    realLdPath += ".real.exe";
+#else
     realLdPath = string(argv[0]) + ".real";
+#endif
 
     if (char *path = getenv("RETRO68_REAL_LD"); path && path[0])
         realLdPath = path;
@@ -178,10 +235,18 @@ int main(int argc, char *argv[])
 
     if(elf2mac)
     {
-        char tmpfile[] = "/tmp/ldscriptXXXXXX";
+#ifdef _WIN32
+        string tmpname = (std::filesystem::temp_directory_path() / "ldscriptXXXXXX").string();
+#else
+        string tmpname = "/tmp/ldscriptXXXXXX";
+#endif
+        vector<char> tmpbuffer(tmpname.begin(), tmpname.end());
+        tmpbuffer.push_back(0);
+        char *tmpfile = tmpbuffer.data();
         int fd = mkstemp(tmpfile);
         if(fd < 0)
             err(EXIT_FAILURE, "can't create temp file");
+        close(fd);
 
         {
             ofstream out(tmpfile);
