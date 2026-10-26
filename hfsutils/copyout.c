@@ -41,6 +41,10 @@ int dup(int);
 # include <sys/stat.h>
 
 # include "hfs.h"
+
+# ifndef O_BINARY
+#  define O_BINARY 0
+# endif
 # include "data.h"
 # include "copyout.h"
 # include "charset.h"
@@ -510,7 +514,7 @@ int opendst(const char *dstname, const char *hint)
 	  dstname = path;
 	}
 
-      fd = open(dstname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+      fd = open(dstname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
 
       if (path)
 	free(path);

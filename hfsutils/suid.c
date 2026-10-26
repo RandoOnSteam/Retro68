@@ -43,6 +43,22 @@ int setgid(gid_t);
 
 # include "suid.h"
 
+# ifdef _WIN32
+
+void suid_init(void)
+{
+}
+
+void suid_enable(void)
+{
+}
+
+void suid_disable(void)
+{
+}
+
+# else
+
 static uid_t uid, euid;
 static gid_t gid, egid;
 
@@ -98,3 +114,5 @@ void suid_disable(void)
 
 # endif
 }
+
+# endif

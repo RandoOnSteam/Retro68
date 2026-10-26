@@ -25,6 +25,20 @@ PREFIX=$DEFAULT_PREFIX
 BINUTILS=`pwd -P`/binutils-build
 BUILD_JOBS=$(nproc || sysctl -n hw.activecpu)
 
+function sourceDir()
+{
+	if [ -n "$MSYSTEM" ]; then
+		realpath --relative-to=. "$SRC/$1"
+	else
+		echo "$SRC/$1"
+	fi
+}
+
+HOST_CONFIGURE_FLAGS=
+if [ -n "$MSYSTEM" ]; then
+	HOST_CONFIGURE_FLAGS="--build=$MINGW_CHOST --host=$MINGW_CHOST"
+fi
+
 ##################### Prerequisites check
 
 if [ ! -d "$SRC/multiversal" ]; then
@@ -243,7 +257,7 @@ if [ $SKIP_THIRDPARTY != true ]; then
 		# Build binutils for 68K
 		mkdir -p binutils-build
 		cd binutils-build
-		$SRC/binutils/configure --target=m68k-apple-macos --prefix=$PREFIX --disable-doc --disable-werror
+		$(sourceDir binutils)/configure $HOST_CONFIGURE_FLAGS --target=m68k-apple-macos --prefix=$PREFIX --disable-doc --disable-werror
 		make -j$BUILD_JOBS
 		make install
 		cd ..
@@ -252,7 +266,7 @@ if [ $SKIP_THIRDPARTY != true ]; then
 		mkdir -p gcc-build
 		cd gcc-build
 		export target_configargs="--disable-nls --enable-libstdcxx-dual-abi=yes --disable-libstdcxx-verbose"
-		$SRC/gcc/configure --target=m68k-apple-macos --prefix=$PREFIX \
+		$(sourceDir gcc)/configure $HOST_CONFIGURE_FLAGS --target=m68k-apple-macos --prefix=$PREFIX \
 				--enable-languages=c,c++ --with-arch=m68k --with-cpu=m68000 \
 				--disable-libssp MAKEINFO=missing
 		# There seems to be a build failure in parallel builds; ignore any errors and try again without -j8.
@@ -268,8 +282,10 @@ if [ $SKIP_THIRDPARTY != true ]; then
 		# (Elf2Mac is built by cmake below)
 		mv $PREFIX/bin/m68k-apple-macos-ld $PREFIX/bin/m68k-apple-macos-ld.real
 		mv $PREFIX/m68k-apple-macos/bin/ld $PREFIX/m68k-apple-macos/bin/ld.real
-		ln -s Elf2Mac $PREFIX/bin/m68k-apple-macos-ld
-		ln -s ../../bin/Elf2Mac $PREFIX/m68k-apple-macos/bin/ld
+		if [ -z "$MSYSTEM" ]; then
+			ln -s Elf2Mac $PREFIX/bin/m68k-apple-macos-ld
+			ln -s ../../bin/Elf2Mac $PREFIX/m68k-apple-macos/bin/ld
+		fi
 
 		if [ $CLEAN_AFTER_BUILD != false ]; then
 			rm -rf binutils-build
@@ -286,7 +302,7 @@ if [ $SKIP_THIRDPARTY != true ]; then
 		# Build binutils for PPC
 		mkdir -p binutils-build-ppc
 		cd binutils-build-ppc
-		$SRC/binutils/configure --disable-plugins --target=powerpc-apple-macos --prefix=$PREFIX --disable-doc --disable-werror
+		$(sourceDir binutils)/configure $HOST_CONFIGURE_FLAGS --disable-plugins --target=powerpc-apple-macos --prefix=$PREFIX --disable-doc --disable-werror
 		make -j$BUILD_JOBS
 		make install
 		cd ..
@@ -295,7 +311,7 @@ if [ $SKIP_THIRDPARTY != true ]; then
 		mkdir -p gcc-build-ppc
 		cd gcc-build-ppc
 		export target_configargs="--disable-nls --enable-libstdcxx-dual-abi=yes --disable-libstdcxx-verbose"
-		$SRC/gcc/configure --target=powerpc-apple-macos --prefix=$PREFIX \
+		$(sourceDir gcc)/configure $HOST_CONFIGURE_FLAGS --target=powerpc-apple-macos --prefix=$PREFIX \
 			--enable-languages=c,c++ --disable-libssp --disable-lto MAKEINFO=missing
 		make -j$BUILD_JOBS
 		make install
@@ -320,7 +336,7 @@ if [ $SKIP_THIRDPARTY != true ]; then
 	mkdir -p $PREFIX/share/man/man1
 	mkdir -p hfsutils
 	cd hfsutils
-	$SRC/hfsutils/configure --prefix=$PREFIX --mandir=$PREFIX/share/man --enable-devlibs
+	$(sourceDir hfsutils)/configure $HOST_CONFIGURE_FLAGS --prefix=$PREFIX --mandir=$PREFIX/share/man --enable-devlibs
 	make
 	make install
 	cd ..
@@ -341,6 +357,12 @@ cd build-host
 cmake ${SRC} -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_BUILD_TYPE=Debug "${HOST_CMAKE_FLAGS[@]}" ${CMAKE_GENERATOR}
 cd ..
 cmake --build build-host --target install
+
+if [ -n "$MSYSTEM" ] && [ $BUILD_68K != false ]; then
+	rm -f $PREFIX/bin/m68k-apple-macos-ld $PREFIX/m68k-apple-macos/bin/ld
+	cp -f $PREFIX/bin/Elf2Mac.exe $PREFIX/bin/m68k-apple-macos-ld.exe
+	cp -f $PREFIX/bin/Elf2Mac.exe $PREFIX/m68k-apple-macos/bin/ld.exe
+fi
 
 echo 'subdirs("build-host")' > CTestTestfile.cmake
 

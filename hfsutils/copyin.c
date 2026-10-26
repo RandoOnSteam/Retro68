@@ -40,6 +40,10 @@ int dup(int);
 # include <errno.h>
 
 # include "hfs.h"
+
+# ifndef O_BINARY
+#  define O_BINARY 0
+# endif
 # include "data.h"
 # include "copyin.h"
 # include "charset.h"
@@ -328,7 +332,7 @@ int opensrc(const char *srcname, const char **dsthint, const char *ext,
       srcname = "";
     }
   else
-    fd = open(srcname, O_RDONLY);
+    fd = open(srcname, O_RDONLY | O_BINARY);
 
   if (fd == -1)
     {

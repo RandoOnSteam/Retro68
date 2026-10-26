@@ -1,6 +1,9 @@
 file(GLOB ELF_FILES src/*.c src/*.h include/*.h)
 add_library(ELF ${ELF_FILES}
 	)
+if(WIN32)
+	target_include_directories(ELF BEFORE PUBLIC compat)
+endif()
 target_include_directories(ELF PRIVATE src)
 target_include_directories(ELF PUBLIC include)
 target_link_libraries(ELF -lz)

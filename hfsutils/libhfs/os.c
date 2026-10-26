@@ -42,6 +42,10 @@ int fstat(int, struct stat *);
 # endif
 
 # include <errno.h>
+
+# ifndef O_BINARY
+#  define O_BINARY 0
+# endif
 # include <sys/stat.h>
 
 # include "libhfs.h"
@@ -54,7 +58,9 @@ int fstat(int, struct stat *);
 int os_open(void **priv, const char *path, int mode)
 {
   int fd;
+# ifdef F_SETLK
   struct flock lock;
+# endif
 
   switch (mode)
     {
@@ -68,10 +74,11 @@ int os_open(void **priv, const char *path, int mode)
       break;
     }
 
-  fd = open(path, mode);
+  fd = open(path, mode | O_BINARY);
   if (fd == -1)
     ERROR(errno, "error opening medium");
 
+# ifdef F_SETLK
   /* lock descriptor against concurrent access */
 
   lock.l_type   = (mode == O_RDONLY) ? F_RDLCK : F_WRLCK;
@@ -82,6 +89,7 @@ int os_open(void **priv, const char *path, int mode)
   if (fcntl(fd, F_SETLK, &lock) == -1 &&
       (errno == EACCES || errno == EAGAIN))
     ERROR(EAGAIN, "unable to obtain lock for medium");
+# endif
 
   *priv = (void *) fd;
 
