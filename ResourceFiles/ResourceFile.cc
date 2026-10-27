@@ -146,7 +146,7 @@ bool ResourceFile::write(std::string path, Format f)
 static bool CheckAppleDouble(fs::path path, std::string prefix)
 {
     fs::path adPath = path.parent_path() / (prefix  + path.filename().string());
-    fs::ifstream in(adPath);
+    fs::ifstream in(adPath, std::ios::binary);
     if(in)
     {
         int magic1 = longword(in);
@@ -203,7 +203,7 @@ bool ResourceFile::assign(std::string pathstring, ResourceFile::Format f)
     }
     if(format == Format::autodetect)
     {
-        fs::ifstream in(path);
+        fs::ifstream in(path, std::ios::binary);
         if(in)
         {
             int magic1 = longword(in);
@@ -308,7 +308,7 @@ bool ResourceFile::read()
 
     if(isSingleFork(format))
     {
-        fs::ifstream in(path);
+        fs::ifstream in(path, std::ios::binary);
         return read(in, format);
     }
 
@@ -316,16 +316,16 @@ bool ResourceFile::read()
     {
         case Format::basilisk:
             {
-                fs::ifstream dataIn(path);
+                fs::ifstream dataIn(path, std::ios::binary);
                 if(!dataIn)
                     return false;
                 data = std::string(std::istreambuf_iterator<char>(dataIn),
                                    std::istreambuf_iterator<char>());
 
-                fs::ifstream rsrcIn(path.parent_path() / ".rsrc" / path.filename());
+                fs::ifstream rsrcIn(path.parent_path() / ".rsrc" / path.filename(), std::ios::binary);
                 if(rsrcIn)
                     resources = Resources(rsrcIn);
-                fs::ifstream finfIn(path.parent_path() / ".finf" / path.filename());
+                fs::ifstream finfIn(path.parent_path() / ".finf" / path.filename(), std::ios::binary);
                 if(finfIn)
                 {
                     type = ostype(finfIn);
@@ -336,12 +336,12 @@ bool ResourceFile::read()
 #ifdef __APPLE__
         case Format::real:
             {
-                fs::ifstream dataIn(path);
+                fs::ifstream dataIn(path, std::ios::binary);
                 if(!dataIn)
                     return false;
                 data = std::string(std::istreambuf_iterator<char>(dataIn),
                                    std::istreambuf_iterator<char>());
-                fs::ifstream rsrcIn(path / "..namedfork" / "rsrc");
+                fs::ifstream rsrcIn(path / "..namedfork" / "rsrc", std::ios::binary);
                 if(rsrcIn)
                     resources = Resources(rsrcIn);
 
@@ -361,7 +361,7 @@ bool ResourceFile::read()
         case Format::underscore_appledouble:
         case Format::percent_appledouble:
             {
-                fs::ifstream dataIn(path);
+                fs::ifstream dataIn(path, std::ios::binary);
                 data = std::string(std::istreambuf_iterator<char>(dataIn),
                                    std::istreambuf_iterator<char>());
 
@@ -369,7 +369,7 @@ bool ResourceFile::read()
                                         "._" : "%";
 
                 fs::path adPath = path.parent_path() / (prefix  + path.filename().string());
-                fs::ifstream in(adPath);
+                fs::ifstream in(adPath, std::ios::binary);
                 if(longword(in) != 0x00051607)
                     return false;
                 if(longword(in) != 0x00020000)
@@ -454,7 +454,7 @@ bool ResourceFile::write()
 
     if(isSingleFork(format))
     {
-        fs::ofstream out(path);
+        fs::ofstream out(path, std::ios::binary);
         return write(out, format);
     }
 
@@ -465,9 +465,9 @@ bool ResourceFile::write()
                 fs::create_directory(path.parent_path() / ".rsrc");
                 fs::create_directory(path.parent_path() / ".finf");
 
-                fs::ofstream dataOut(path);
-                fs::ofstream rsrcOut(path.parent_path() / ".rsrc" / path.filename());
-                fs::ofstream finfOut(path.parent_path() / ".finf" / path.filename());
+                fs::ofstream dataOut(path, std::ios::binary);
+                fs::ofstream rsrcOut(path.parent_path() / ".rsrc" / path.filename(), std::ios::binary);
+                fs::ofstream finfOut(path.parent_path() / ".finf" / path.filename(), std::ios::binary);
 
                 dataOut << data;
                 resources.writeFork(rsrcOut);
@@ -481,8 +481,8 @@ bool ResourceFile::write()
 #ifdef __APPLE__
         case Format::real:
             {
-                fs::ofstream dataOut(path);
-                fs::ofstream rsrcOut(path / "..namedfork" / "rsrc");
+                fs::ofstream dataOut(path, std::ios::binary);
+                fs::ofstream rsrcOut(path / "..namedfork" / "rsrc", std::ios::binary);
                 std::ostringstream finfOut;
 
                 dataOut << data;
@@ -501,7 +501,7 @@ bool ResourceFile::write()
         case Format::underscore_appledouble:
         case Format::percent_appledouble:
             {
-                fs::ofstream dataOut(path);
+                fs::ofstream dataOut(path, std::ios::binary);
 
                 dataOut << data;
 
@@ -510,7 +510,7 @@ bool ResourceFile::write()
 
                 fs::path adPath = path.parent_path() / (prefix  + path.filename().string());
 
-                fs::ofstream out(adPath);
+                fs::ofstream out(adPath, std::ios::binary);
 
                 longword(out, 0x00051607);
                 longword(out, 0x00020000);

@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
         std::cerr << "Usage: ConvertObj mpw.o > retro68.s\n";
         return 1;
     }
-    std::ifstream in(argv[1]);
+    std::ifstream in(argv[1], std::ios::binary);
     if(!in)
     {
         std::cerr << "Could not read input file \"" << argv[1] << "\"\n";
@@ -388,7 +388,7 @@ int main(int argc, char* argv[])
                     int sz = word(in);
                     int stringId = word(in);
                     int end = (int)(in.tellg()) - 6 + sz;
-                    while(in.tellg() < end)
+                    while(in && in.tellg() < end)
                     {
                         int n = byte(in);
                         string s;
@@ -493,7 +493,7 @@ int main(int argc, char* argv[])
 
                     assert(module);
 
-                    while(in.tellg() < end)
+                    while(in && in.tellg() < end)
                     {
                         int offset = word(in);
                         if(verbose)
@@ -537,7 +537,7 @@ int main(int argc, char* argv[])
                     if(verbose)
                         std::cerr << "ComputedReference to "
                             << stringDictionary[name1] << " - " << stringDictionary[name2] << " at\n";
-                    while(in.tellg() < end)
+                    while(in && in.tellg() < end)
                     {
                         int offset = word(in);
                         if(verbose)

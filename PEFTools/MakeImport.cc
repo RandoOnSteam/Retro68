@@ -16,6 +16,9 @@
 #endif
 
 #include <fcntl.h>
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 #include <unistd.h>
 #include <assert.h>
 
@@ -411,7 +414,7 @@ int main (int argc, char * const argv[])
         return 1;
     }
     
-    int fd = open(argv[1], O_RDONLY, 0);
+    int fd = open(argv[1], O_RDONLY | O_BINARY, 0);
     if(fd < 0)
     {
         perror(argv[1]);

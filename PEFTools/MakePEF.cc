@@ -114,6 +114,10 @@ public:
         if(verboseFlag)
             std::cerr << "XCOFF name \"" << name << '"' << std::endl;
 
+        size_t separator = name.find_last_of("/\\");
+        if(separator != std::string::npos && name.compare(separator + 1, 5, "imp__") == 0)
+            name = name.substr(separator + 1);
+
         int dotIndex = name.rfind('.');
         if(dotIndex)
         {
@@ -282,7 +286,7 @@ public:
 
 void mkpef(const std::string& inFn, const std::string& outFn)
 {
-    std::ifstream in(inFn);
+    std::ifstream in(inFn, std::ios::binary);
 
     external_filehdr xcoffHeader;
     external_aouthdr aoutHeader;
@@ -520,7 +524,7 @@ void mkpef(const std::string& inFn, const std::string& outFn)
     loaderSectionHeader.shareKind = kPEFGlobalShare;
     loaderSectionHeader.alignment = 2;
     
-    std::ofstream out(outFn);
+    std::ofstream out(outFn, std::ios::binary);
     if(verboseFlag)
         std::cerr << "Writing Headers..." << std::flush;
 

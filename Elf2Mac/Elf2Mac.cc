@@ -39,6 +39,8 @@
 #endif
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <sstream>
 
 #include "Object.h"
 
@@ -249,15 +251,21 @@ int main(int argc, char *argv[])
         close(fd);
 
         {
-            ofstream out(tmpfile);
+            std::ostringstream script;
             if(segments)
             {
-                segmentMap.CreateLdScript(out, entryPoint, stripMacsbug);
+                segmentMap.CreateLdScript(script, entryPoint, stripMacsbug);
             }
             else
             {
-                CreateFlatLdScript(out, entryPoint, stripMacsbug);
+                CreateFlatLdScript(script, entryPoint, stripMacsbug);
             }
+            string text = script.str();
+#ifdef _WIN32
+            boost::algorithm::replace_all(text, "*/lib", "*lib");
+#endif
+            ofstream out(tmpfile);
+            out << text;
         }
  
         args2.push_back("--no-warn-rwx-segments");

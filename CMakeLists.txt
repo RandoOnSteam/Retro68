@@ -27,6 +27,12 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror=return-type -Werror=strict-pro
 
 enable_testing()
 
+if(CMAKE_HOST_WIN32)
+    set(RETRO68_HOST_EXECUTABLE_SUFFIX .exe)
+else()
+    set(RETRO68_HOST_EXECUTABLE_SUFFIX "")
+endif()
+
 if(CMAKE_SYSTEM_NAME MATCHES Retro.*)
 
 set( REZ_TEMPLATES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libretro)

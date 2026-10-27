@@ -26,6 +26,9 @@
 
 #include <err.h>
 #include <fcntl.h>
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 #include <sys/types.h>
 #include <fstream>
 #include <iomanip>
@@ -55,7 +58,7 @@ Object::Object(string input)
     if(elf_version ( EV_CURRENT ) == EV_NONE)
         errx(EXIT_FAILURE , "ELF library initialization failed: %s", elf_errmsg( -1));
 
-    int fd = open(input.c_str(), O_RDONLY, 0);
+    int fd = open(input.c_str(), O_RDONLY | O_BINARY, 0);
     elf = elf_begin(fd, ELF_C_READ, NULL);
 
     elf_getshdrstrndx(elf, &sectionHeaderStringTableIdx);
@@ -155,7 +158,7 @@ void Object::FlatCode(std::ostream& out)
 
 void Object::FlatCode(string fn)
 {
-    ofstream out(fn);
+    ofstream out(fn, std::ios::binary);
     FlatCode(out);
 }
 

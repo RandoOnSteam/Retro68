@@ -22,13 +22,13 @@ set( RETRO68_ROOT "@RETRO68_ROOT@" CACHE PATH "path to root of Retro68 Toolchain
 set( CMAKE_INSTALL_PREFIX "${RETRO68_ROOT}/powerpc-apple-macos/" CACHE PATH "installation prefix" )
 set( CMAKE_SYSTEM_PREFIX_PATH "${RETRO68_ROOT}/powerpc-apple-macos/" )
 
-set( MAKE_PEF "@CMAKE_BINARY_DIR@/PEFTools/MakePEF" )
-set( MAKE_IMPORT "@CMAKE_BINARY_DIR@/PEFTools/MakeImport" )
-set( REZ "@CMAKE_BINARY_DIR@/Rez/Rez" )
+set( MAKE_PEF "@CMAKE_BINARY_DIR@/PEFTools/MakePEF@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
+set( MAKE_IMPORT "@CMAKE_BINARY_DIR@/PEFTools/MakeImport@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
+set( REZ "@CMAKE_BINARY_DIR@/Rez/Rez@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
 set( REZ_INCLUDE_PATH "${CMAKE_INSTALL_PREFIX}/RIncludes" )
 
-set( CMAKE_C_COMPILER "${RETRO68_ROOT}/bin/powerpc-apple-macos-gcc" )
-set( CMAKE_CXX_COMPILER "${RETRO68_ROOT}/bin/powerpc-apple-macos-g++" )
+set( CMAKE_C_COMPILER "${RETRO68_ROOT}/bin/powerpc-apple-macos-gcc@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
+set( CMAKE_CXX_COMPILER "${RETRO68_ROOT}/bin/powerpc-apple-macos-g++@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
 set( CMAKE_EXE_LINKER_FLAGS_INIT "-carbon" )
 
 list( APPEND CMAKE_MODULE_PATH "@CMAKE_SOURCE_DIR@/cmake" )

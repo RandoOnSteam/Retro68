@@ -22,13 +22,13 @@ set( RETRO68_ROOT "@RETRO68_ROOT@" CACHE PATH "path to root of Retro68 Toolchain
 set( CMAKE_INSTALL_PREFIX "${RETRO68_ROOT}/powerpc-apple-macos/" CACHE PATH "installation prefix" )
 set( CMAKE_SYSTEM_PREFIX_PATH "${RETRO68_ROOT}/powerpc-apple-macos/" )
 
-set( MAKE_PEF "${RETRO68_ROOT}/bin/MakePEF" )
-set( MAKE_IMPORT "${RETRO68_ROOT}/bin/MakeImport" )
-set( REZ "${RETRO68_ROOT}/bin/Rez" )
+set( MAKE_PEF "${RETRO68_ROOT}/bin/MakePEF@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
+set( MAKE_IMPORT "${RETRO68_ROOT}/bin/MakeImport@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
+set( REZ "${RETRO68_ROOT}/bin/Rez@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
 set( REZ_INCLUDE_PATH "${RETRO68_ROOT}/powerpc-apple-macos/RIncludes" )
 
-set( CMAKE_C_COMPILER "${RETRO68_ROOT}/bin/powerpc-apple-macos-gcc" )
-set( CMAKE_CXX_COMPILER "${RETRO68_ROOT}/bin/powerpc-apple-macos-g++" )
+set( CMAKE_C_COMPILER "${RETRO68_ROOT}/bin/powerpc-apple-macos-gcc@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
+set( CMAKE_CXX_COMPILER "${RETRO68_ROOT}/bin/powerpc-apple-macos-g++@RETRO68_HOST_EXECUTABLE_SUFFIX@" )
 
 set( REZ_TEMPLATES_PATH ${REZ_INCLUDE_PATH})
 

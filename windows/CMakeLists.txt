@@ -35,3 +35,27 @@ add_custom_command(
   USES_TERMINAL
   VERBATIM)
 add_custom_target(retro68 ALL DEPENDS "${stamp}")
+
+function(retro68_package name flavor)
+  set(package "${CMAKE_BINARY_DIR}/${name}.zip")
+  set(stage "${CMAKE_BINARY_DIR}/package-${flavor}")
+  add_custom_command(
+    OUTPUT "${package}"
+    COMMAND ${CMAKE_COMMAND} -E env
+      MSYSTEM=UCRT64 CHERE_INVOKING=1 MSYS2_PATH_TYPE=minimal
+      "${MSYS2_ROOT}/usr/bin/bash.exe" -lc
+      "sh \"$(cygpath -u '${CMAKE_CURRENT_SOURCE_DIR}/package-windows.sh')\" \"$(cygpath -u '${RETRO68_WORK_DIR}/toolchain')\" \"$(cygpath -u '${stage}/Retro68')\" ${flavor}"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${package}"
+    COMMAND ${CMAKE_COMMAND} -E chdir "${stage}" ${CMAKE_COMMAND} -E tar cf "${package}" --format=zip Retro68
+    DEPENDS retro68 "${stamp}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/package-windows.sh"
+      "${CMAKE_CURRENT_SOURCE_DIR}/install-interfaces.sh"
+      "${CMAKE_CURRENT_SOURCE_DIR}/install-interfaces.cmd"
+      "${CMAKE_CURRENT_SOURCE_DIR}/README.windows.txt"
+    USES_TERMINAL
+    VERBATIM)
+  add_custom_target(retro68-package-${flavor} DEPENDS "${package}")
+endfunction()
+
+retro68_package(retro68-windows-x86_64 private)
+retro68_package(retro68-windows-x86_64-nointerfaces public)

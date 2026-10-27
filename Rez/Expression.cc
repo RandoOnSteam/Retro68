@@ -188,7 +188,7 @@ int ArrayIndexExpr::evaluateInt(ResourceCompiler *ctx)
 std::string ReadExpr::evaluateString(ResourceCompiler *ctx)
 {
     std::string filename = arg->evaluateString(ctx);
-    std::ifstream instream(filename);
+    std::ifstream instream(filename, std::ios::binary);
     if(!instream)
     {
         ctx->problem(Diagnostic(Diagnostic::Severity::error, "could not $$read file " + filename, location));
